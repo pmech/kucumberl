@@ -242,9 +242,9 @@ print_step_errors(Type, State, ScnID, EID, ActID, Act) ->
 	    SE = example_str(Type, State, ScnID, EID, ActID, Act),
 	    case State#state.color of
 		true ->
-		    io:format("~s\e[31m [E] ~s\e[0m~n", [S1++SE, E]);
+		    io:format("~s\e[31m [E] ~p\e[0m~n", [S1++SE, E]);
 		false ->
-		    io:format("~s [E] ~s~n", [S1++SE, E])
+		    io:format("~s [E] ~p~n", [S1++SE, E])
 	    end
     end.
 

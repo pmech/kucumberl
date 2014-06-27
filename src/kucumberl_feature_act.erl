@@ -38,9 +38,12 @@ run(F, {setup, ScnID, EID}) ->
     ets:insert(kctx, {{F#feature.id, setup, ScnID, EID}, ok}),
     F;
 run(F, {teardown, ScnID, EID}) ->
+    [[State0]] = ets:match(kctx, {{F#feature.id, state, ScnID, EID}, '$1'}),
     State = case F#feature.fcode#feature_code.teardown_mod of
-		[] -> ok;
-		Mod -> Mod:teardown()
+		[] ->
+                    ok;
+		Mod ->
+                    Mod:teardown(State0)
 	    end,
     ets:insert(kctx, {{F#feature.id, state,    ScnID, EID}, State}),
     ets:insert(kctx, {{F#feature.id, teardown, ScnID, EID}, ok}),
@@ -147,7 +150,7 @@ exec_step(Step, Mod, Re, State, Params) ->
     try ExecFunc() of
 	Val -> Val
     catch
-	E -> {failed, E}
+	E:R -> {failed, {E, R}}
     end.
 
 prepare_step_params(F, ScnID, EID, Act, Re) ->

@@ -173,18 +173,13 @@ store_hook_funcs(F) ->
 	    Func =
 		fun (I, F1) ->
 			case I of
-			    {function,_,S,0,_}
-			      when S =:= setup;
-				   S =:= teardown ->
-				case S of
-				    setup ->
-					FC = F1#feature.fcode#feature_code{setup_mod = StepModule},
-					F1#feature{fcode = FC};
-				    teardown ->
-					FC = F1#feature.fcode#feature_code{teardown_mod = StepModule},
-					F1#feature{fcode = FC}
-				end;
-			    _ -> F1
+			    {function,_,setup,0,_} ->
+                                FC = F1#feature.fcode#feature_code{setup_mod = StepModule},
+                                F1#feature{fcode = FC};
+                            {function,_,teardown,1,_} ->
+                                FC = F1#feature.fcode#feature_code{teardown_mod = StepModule},
+                                F1#feature{fcode = FC};
+                            _ -> F1
 			end
 		end,
 	    lists:foldl(Func, F, Form);
