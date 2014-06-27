@@ -77,13 +77,13 @@ If you save the feature file and execute ./kucumberl you will see something like
 ```
 Feature: Welcome user
   Scenario: Hello my name is...
-    Given I type my name, 'John'                                 Not implementated
-    And I type my surname, 'Doe'                                 Not implementated
-    When I press 'good welcome' button                           Not implementated
-    Then I see in the screen 'Hello, Mr John Doe'                Not implementated
+    Given I type my name, 'John'                                 Not implemented
+    And I type my surname, 'Doe'                                 Not implemented
+    When I press 'good welcome' button                           Not implemented
+    Then I see in the screen 'Hello, Mr John Doe'                Not implemented
 
 0 Scenario (0 failed, 0 passed)
-4 Steps (0 failed, 0 passed, 0 skipped, 4 not implementated)
+4 Steps (0 failed, 0 passed, 0 skipped, 4 not implemented)
 ```
 
 Yes, you have not implemented the test. 
@@ -137,7 +137,7 @@ Feature: Welcome user
     Then I see in the screen 'Hello, Mr John Doe'                OK
 
 1 Scenario (0 failed, 1 passed)
-4 Steps (0 failed, 4 passed, 0 skipped, 0 not implementated)
+4 Steps (0 failed, 4 passed, 0 skipped, 0 not implemented)
 ```
 
 If you want to check more complex examples, go [here](http://github.com/openshine/kucumberl/tree/master/examples).

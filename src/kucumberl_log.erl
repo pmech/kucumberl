@@ -202,7 +202,7 @@ print_step_with_result(Type, State, ScnID, EID, ActID, Act) ->
     SR = case R of
 	     ok -> ok_str(State);
 	     {failed, _Reason} -> failed_str(State);
-	     not_implementated -> not_impl_str(State);
+	     not_implemented -> not_impl_str(State);
 	     disabled -> disabled_str(State)
 	 end,
     io:format("~s~s~s~n", [AnsiEsc,
@@ -298,7 +298,7 @@ print_full_stats(St) ->
     StepsFailed = length(ets:match(kctx, {{'$1', '$2', '$3', '$4', '$5'}, {failed, '_'}})),
     StepsPassed = length(ets:match(kctx, {{'$1', '$2', '$3', '$4', '$5'}, ok})),
     StepsSkipped = length(ets:match(kctx, {{'$1', '$2', '$3', '$4', '$5'}, disabled})),
-    StepsNI = length(ets:match(kctx, {{'$1', '$2', '$3', '$4', '$5'}, not_implementated})),
+    StepsNI = length(ets:match(kctx, {{'$1', '$2', '$3', '$4', '$5'}, not_implemented})),
 
     io:format("~p Scenarios (~s, ~s)~n",
 	      [ScnFailed+ScnPassed,
@@ -330,7 +330,7 @@ background_str() -> "[BG] ".
 
 ok_str(St) -> case St#state.color of true -> "\e[32mOK\e[0m"; _ -> "OK" end.
 disabled_str(St) -> case St#state.color of true -> "\e[34mSkipped\e[0m"; _ -> "Skipped" end.
-not_impl_str(St) -> case St#state.color of true -> "\e[35mNot implementated\e[0m"; _ -> "Not implementated" end.
+not_impl_str(St) -> case St#state.color of true -> "\e[35mNot implemented\e[0m"; _ -> "Not implemented" end.
 failed_str(St) -> case St#state.color of true -> "\e[31mFAILED\e[0m"; _ -> "FAILED" end.
 
 stats_failed_str(St,Num) -> case St#state.color of
@@ -349,8 +349,8 @@ stats_disabled_str(St,Num) ->
     end.
 stats_ni_str(St,Num) ->
     case St#state.color of
-	true -> "\e[35m" ++ integer_to_list(Num) ++" not implementated"++"\e[0m";
-	_ ->  integer_to_list(Num) ++" not implementated"
+	true -> "\e[35m" ++ integer_to_list(Num) ++" not implemented"++"\e[0m";
+	_ ->  integer_to_list(Num) ++" not implemented"
     end.
 
 step2str(Type) ->

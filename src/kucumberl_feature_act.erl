@@ -90,7 +90,7 @@ run_step(F, {ScnType, ScnID, EID, ActID}) ->
 	[] ->
 	    %%io:format("F: ~p Scn: ~p E: ~p T: ~p Act: ~p NO HANDLERS~n", [F#feature.id, ScnID, EID, ScnType, ActID]),
 	    ets:insert(kctx, {{F#feature.id, status, ScnID, EID}, disabled}),
-	    ets:insert(kctx, {{F#feature.id, ScnType, ScnID, EID, ActID}, not_implementated});
+	    ets:insert(kctx, {{F#feature.id, ScnType, ScnID, EID, ActID}, not_implemented});
 	[StepImpl|_] ->
 	    case Status of
 		ok ->
