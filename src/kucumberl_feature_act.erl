@@ -28,10 +28,11 @@
 %%%===================================================================
 
 run(F, {setup, ScnID, EID}) ->
-    State = case F#feature.fcode#feature_code.setup_mod of
-		[] -> [];
-		Mod -> Mod:setup()
-	    end,
+    State = lists:foldl(fun(Mod,Acc) ->
+                                set_modstate(Acc, Mod, Mod:setup())
+                        end,
+                        dict:new(),
+                        F#feature.fcode#feature_code.setup_mod),
 
     ets:insert(kctx, {{F#feature.id, state, ScnID, EID}, State}),
     ets:insert(kctx, {{F#feature.id, status, ScnID, EID}, ok}),
@@ -39,12 +40,13 @@ run(F, {setup, ScnID, EID}) ->
     F;
 run(F, {teardown, ScnID, EID}) ->
     [[State0]] = ets:match(kctx, {{F#feature.id, state, ScnID, EID}, '$1'}),
-    State = case F#feature.fcode#feature_code.teardown_mod of
-		[] ->
-                    ok;
-		Mod ->
-                    Mod:teardown(State0)
-	    end,
+    State = lists:foldr(fun(Mod,Acc) ->
+                                ModState = Mod:teardown(get_modstate(Acc,Mod)),
+                                set_modstate(Acc, Mod, ModState)
+                        end,
+                        State0,
+                        F#feature.fcode#feature_code.teardown_mod),
+
     ets:insert(kctx, {{F#feature.id, state,    ScnID, EID}, State}),
     ets:insert(kctx, {{F#feature.id, teardown, ScnID, EID}, ok}),
     F;
@@ -138,19 +140,26 @@ find_step_handlers(F, ScnID, EID, Step, Act) ->
       F#feature.fcode#feature_code.steps).
 
 exec_step(Step, Mod, Re, State, Params) ->
+    ModState = get_modstate(State, Mod),
     ExecFunc =
 	fun () ->
 		case Step of
-		    given_step -> Mod:given(Re, State, Params);
-		    when_step  -> Mod:'when'(Re, State, Params);
-		    then_step  -> Mod:then(Re, State, Params)
+		    given_step -> Mod:given(Re, ModState, Params);
+		    when_step  -> Mod:'when'(Re, ModState, Params);
+		    then_step  -> Mod:then(Re, ModState, Params)
 		end
 	end,
 
     try ExecFunc() of
-	Val -> Val
+	{ok,Val} -> {ok,set_modstate(State, Mod, Val)};
+        {failed,_}=Res -> Res
     catch
-	E:R -> {failed, {E, R}}
+	E:R -> {failed, {E, R, [X || X <- erlang:get_stacktrace(),
+                                     begin M=element(1,X),
+                                           M /= kucumberl_feature_act andalso
+                                           M /= kucumberl_feature_scn andalso
+                                           M /= kucumberl_feature
+                                     end]}}
     end.
 
 prepare_step_params(F, ScnID, EID, Act, Re) ->
@@ -195,3 +204,11 @@ prepare_act(F, ScnID, EID, Act) ->
 %%%===================================================================
 %%% Util functions
 %%%===================================================================
+get_modstate(State, Mod) ->
+    case dict:find(Mod,State) of
+        {ok,ModState} -> ModState;
+        error -> no_state
+    end.
+
+set_modstate(State, Mod, ModState) ->
+    dict:store(Mod, ModState, State).

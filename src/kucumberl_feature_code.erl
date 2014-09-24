@@ -165,19 +165,25 @@ store_step_regexps(F, [File|Rest]) ->
 store_step_regexps(F, []) -> F.
 
 store_hook_funcs(F) ->
-    DStep = get_default_step_file(F),
-    StepModule = get_modname_from_erl(DStep),
+    StepMods = lists:usort([M || {_,M,_} <- F#feature.fcode#feature_code.steps]),
+    lists:foldl(fun (StepModule,AccF) -> store_hook_funcs(AccF,StepModule) end,
+                F,
+                StepMods).
 
+store_hook_funcs(F, StepModule) ->
+    DStep = get_step_file_for_module(F, StepModule),
     case epp:parse_file(DStep, "", "") of
 	{ok, Form} ->
 	    Func =
 		fun (I, F1) ->
 			case I of
 			    {function,_,setup,0,_} ->
-                                FC = F1#feature.fcode#feature_code{setup_mod = StepModule},
+                                OldSetups = F1#feature.fcode#feature_code.setup_mod,
+                                FC = F1#feature.fcode#feature_code{setup_mod = [StepModule|OldSetups]},
                                 F1#feature{fcode = FC};
                             {function,_,teardown,1,_} ->
-                                FC = F1#feature.fcode#feature_code{teardown_mod = StepModule},
+                                OldTeardowns = F1#feature.fcode#feature_code.teardown_mod,
+                                FC = F1#feature.fcode#feature_code{teardown_mod = [StepModule|OldTeardowns]},
                                 F1#feature{fcode = FC};
                             _ -> F1
 			end
@@ -200,6 +206,11 @@ get_default_step_file(F) ->
     {_, Cwd} = file:get_cwd(),
     re:replace(StepFile, "^" ++ Cwd ++ ".",
 	       "", [{return, list}]).
+
+get_step_file_for_module(F,Mod) ->
+    FFile = F#feature.path,
+    filename:join(filename:join(filename:dirname(FFile), "step_definitions"),
+                  atom_to_list(Mod)++".erl").
 
 get_feature_files(F, Type) ->
     FFile = F#feature.path,
